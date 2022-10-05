@@ -51,20 +51,102 @@
 				newMeshes[0].scaling = new BABYLON.Vector3(0.05, 0.05, 0.05);
 				newMeshes[0].position.z = -3;
 			});*/
+			var grid = {
+        'h' : 30,
+        'w' : 30
+    };
+			const tiledGround = new BABYLON.MeshBuilder.CreateTiledGround("Ground", {xmin: -30, zmin: -30, xmax: 30, zmax: 30, subdivisions: grid});
 			
-			BABYLON.SceneLoader.ImportMesh("", "/", "Drill_01_1k.glb", scene, function(newMeshes){
-				newMeshes[0].scaling = new BABYLON.Vector3(21, 21, 21);
+			const grassMaterial = new BABYLON.StandardMaterial("grass");
+			grassMaterial.diffuseTexture = new BABYLON.Texture("babylon_test/grass.png");
+
+			const rockMaterial = new BABYLON.StandardMaterial("rock");
+			rockMaterial.diffuseTexture = new BABYLON.Texture("babylon_test/rock.png");
+			
+			const multimat = new BABYLON.MultiMaterial("multi", scene);
+			multimat.subMaterials.push(grassMaterial);
+			multimat.subMaterials.push(rockMaterial);
+			tiledGround.material = multimat;
+			
+			
+			const verticesCount = tiledGround.getTotalVertices();
+			const tileIndicesLength = tiledGround.getIndices().length / (grid.w * grid.h);
+			
+			tiledGround.subMeshes = [];
+			let base = 0;
+			for (let row = 0; row < grid.h; row++) {
+				for (let col = 0; col < grid.w; col++) {
+					tiledGround.subMeshes.push(new BABYLON.SubMesh(row%2 ^ col%2, 0, verticesCount, base , tileIndicesLength, tiledGround));
+					base += tileIndicesLength;
+				}
+			}
+			console.log(tiledGround)
+			
+			/*var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 25, height: 25}, scene);
+			let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
+			ground.material = groundMaterial;
+			let groundTexture = new BABYLON.Texture(Assets.textures.checkerboard_basecolor_png.rootUrl, scene);
+			ground.material.diffuseTexture = groundTexture;*/
+			hero = null
+			BABYLON.SceneLoader.ImportMesh("", "babylon_test/", "Sculpt_Bases_Heads.babylon", scene, function(newMeshes){
+				hero = newMeshes[0];
+				hero.isPickable = true;
+				hero.scaling = new BABYLON.Vector3(0.3,0.3,0.3);
+				hero.position.x = 1;
+				hero.position.z = 1;
 			});
 			
-			const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, new BABYLON.Vector3(0, 0, 0));
+			var camera = new BABYLON.ArcRotateCamera(
+				"Camera",
+				Math.PI / 2,
+				Math.PI,
+				60,
+				BABYLON.Vector3.Zero(),
+				scene
+			);
+			//camera.lowerAlphaLimit = -Math.PI ;
+			//camera.upperAlphaLimit = -Math.PI / 4;
+			camera.upperBetaLimit =  Math.PI / 3;
 			camera.attachControl(canvas, true);
+			camera.lowerRadiusLimit = 10;
+			camera.upperRadiusLimit = 50;
 			const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 1));
+			
+			const pointerDown = (mesh, subMeshId) => {
+				if (mesh === tiledGround) {
+					let loopMechId = 0;
+					for (let row = 0; row < grid.h; row++) {
+						for (let col = 0; col < grid.w; col++) {
+							if(subMeshId/2 == loopMechId){
+								hero.position.x = -30 + 1 + col*2 ;
+								hero.position.z = -30 + 1 + row*2 ;
+							}
+							loopMechId++
+						}
+					}
+				}
+				if (mesh === hero) {
+					hero.material = new BABYLON.StandardMaterial("Ground Material", scene);
+				}
+			}
 
+			scene.onPointerObservable.add((pointerInfo) => {      		
+				switch (pointerInfo.type) {
+					case BABYLON.PointerEventTypes.POINTERUP:
+						if(pointerInfo.pickInfo.hit) {
+							
+							pointerDown(pointerInfo.pickInfo.pickedMesh, pointerInfo.pickInfo.subMeshId)
+						}
+						break;
+				}
+			});
+			
 			return scene;
 		};
-
+		
 		const scene = createScene(); //Call the createScene function
-
+		
+		
       // Register a render loop to repeatedly render the scene
 		engine.runRenderLoop(function () {
 			scene.render();
