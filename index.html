@@ -58,10 +58,10 @@
 			const tiledGround = new BABYLON.MeshBuilder.CreateTiledGround("Ground", {xmin: -30, zmin: -30, xmax: 30, zmax: 30, subdivisions: grid});
 			
 			const grassMaterial = new BABYLON.StandardMaterial("grass");
-			grassMaterial.diffuseTexture = new BABYLON.Texture("babylon_test/grass.png");
+			grassMaterial.diffuseTexture = new BABYLON.Texture("/grass.png");
 
 			const rockMaterial = new BABYLON.StandardMaterial("rock");
-			rockMaterial.diffuseTexture = new BABYLON.Texture("babylon_test/rock.png");
+			rockMaterial.diffuseTexture = new BABYLON.Texture("/rock.png");
 			
 			const multimat = new BABYLON.MultiMaterial("multi", scene);
 			multimat.subMaterials.push(grassMaterial);
@@ -88,7 +88,7 @@
 			let groundTexture = new BABYLON.Texture(Assets.textures.checkerboard_basecolor_png.rootUrl, scene);
 			ground.material.diffuseTexture = groundTexture;*/
 			hero = null
-			BABYLON.SceneLoader.ImportMesh("", "babylon_test/", "Sculpt_Bases_Heads.babylon", scene, function(newMeshes){
+			BABYLON.SceneLoader.ImportMesh("", "/", "Sculpt_Bases_Heads.babylon", scene, function(newMeshes){
 				hero = newMeshes[0];
 				hero.isPickable = true;
 				hero.scaling = new BABYLON.Vector3(0.3,0.3,0.3);
